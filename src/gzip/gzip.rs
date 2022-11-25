@@ -2,7 +2,7 @@ use super::crc;
 use crate::deflate::deflate;
 use chrono::{DateTime, TimeZone};
 
-fn gzip<Tz: TimeZone>(data: &Vec<u8>, mtime: &DateTime<Tz>) -> Vec<u8> {
+pub fn gzip<Tz: TimeZone>(data: &Vec<u8>, mtime: &DateTime<Tz>) -> Vec<u8> {
     member(data, mtime)
 }
 
