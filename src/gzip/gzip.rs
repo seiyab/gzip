@@ -19,7 +19,7 @@ fn header<Tz: TimeZone>(mtime: &DateTime<Tz>) -> Vec<u8> {
     h.push(ID1);
     h.push(ID2);
     h.push(CM);
-    h.push(flg {}.byte());
+    h.push(Flg {}.byte());
     for b in mtime.timestamp().to_le_bytes().iter().take(4) {
         h.push(*b);
     }
@@ -35,9 +35,9 @@ const CM: u8 = 0x08;
 const XFL: u8 = 0x0;
 const OS_UNKNOWN: u8 = 0xff;
 
-struct flg {}
+struct Flg {}
 
-impl flg {
+impl Flg {
     fn byte(&self) -> u8 {
         return 0;
     }

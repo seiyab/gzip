@@ -14,10 +14,10 @@ pub fn crc(data: &Vec<u8>) -> [u8; 4] {
 }
 
 pub fn table() -> &'static [usize; 256] {
-    static mut t: [usize; 256] = [0; 256];
+    static mut T: [usize; 256] = [0; 256];
     unsafe {
-        if t[0] > 0 {
-            return &t;
+        if T[0] > 0 {
+            return &T;
         };
     }
     for n in 0..256 as usize {
@@ -30,10 +30,10 @@ pub fn table() -> &'static [usize; 256] {
             }
         }
         unsafe {
-            t[n] = c;
+            T[n] = c;
         }
     }
     unsafe {
-        return &t;
+        return &T;
     }
 }
