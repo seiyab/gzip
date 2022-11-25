@@ -1,5 +1,7 @@
 use std::io::{self, Read, Write};
 
+mod deflate;
+
 fn main() -> io::Result<()> {
     let mut buf: [u8; 10] = [0; 10];
     let mut stdin = io::stdin();
