@@ -1,4 +1,4 @@
-fn deflate(data: &Vec<u8>) -> Vec<u8> {
+pub fn deflate(data: &Vec<u8>) -> Vec<u8> {
     let mut block = Vec::<u8>::new();
     block.push(0b00000001u8);
     for b in non_compressed(data).iter() {

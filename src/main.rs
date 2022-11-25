@@ -1,6 +1,7 @@
 use std::io::{self, Read, Write};
 
 mod deflate;
+mod gzip;
 
 fn main() -> io::Result<()> {
     let mut buf: [u8; 10] = [0; 10];
