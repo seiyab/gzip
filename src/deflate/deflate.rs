@@ -41,4 +41,17 @@ mod tests {
 
         assert_eq!("foobar", s);
     }
+
+    #[test]
+    fn read_deflate_256_bytes() {
+        let data = (0..255u8).collect();
+        let result = deflate(&data);
+        let mut deflater = DeflateDecoder::new(&result[..]);
+        let mut buf = Vec::new();
+        if let Err(e) = deflater.read_to_end(&mut buf) {
+            panic!("{e:#?}")
+        }
+
+        assert_eq!(&data, &buf);
+    }
 }
