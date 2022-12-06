@@ -37,8 +37,35 @@ fn length_code(l: usize) -> Vec<bool> {
 }
 
 fn distance_code(d: usize) -> Vec<bool> {
-    if d != 3 {
-        panic!("unsupported distance");
+    if d < 5 {
+        distance_bits_for(d, 0, 0, 1)
+    } else if d < 9 {
+        distance_bits_for(d, 4, 1, 5)
+    } else if d < 17 {
+        distance_bits_for(d, 6, 2, 9)
+    } else if d < 33 {
+        distance_bits_for(d, 8, 3, 17)
+    } else if d < 65 {
+        distance_bits_for(d, 10, 4, 33)
+    } else if d < 129 {
+        distance_bits_for(d, 12, 5, 65)
+    } else {
+        panic!("unsupported distance")
     }
-    usize_to_bits(2, 5)
+}
+
+fn distance_bits_for(
+    dist: usize,
+    group_first_code: usize,
+    group_bits: u32,
+    group_first_dist: usize,
+) -> Vec<bool> {
+    let group_code_size = 2usize.pow(group_bits);
+    let degree_in_group = dist - group_first_dist;
+    let code = group_first_code + degree_in_group / group_code_size;
+    let mut bits = usize_to_bits(code, 5);
+    let mut extra = usize_to_bits(degree_in_group, group_bits as usize);
+    extra.reverse();
+    bits.extend(extra);
+    bits
 }
