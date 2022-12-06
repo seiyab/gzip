@@ -1,4 +1,7 @@
-use super::{locator::Locator, symbol::Symbol};
+use super::{
+    locator::{Locator, Progress},
+    symbol::Symbol,
+};
 use crate::deflate::bits::Bits;
 
 pub fn fixed_huffman(data: &Vec<u8>) -> Vec<u8> {
@@ -6,33 +9,19 @@ pub fn fixed_huffman(data: &Vec<u8>) -> Vec<u8> {
     bits.add([true, true, false].iter());
     let mut symbols: Vec<Symbol> = Vec::new();
     let mut locator = Locator::new();
-    let mut i = 0;
-    while i < data.len() {
-        let b = data[i];
-        let triple = if i + 2 < data.len() {
-            Some([data[i], data[i + 1], data[i + 2]])
-        } else {
-            None
-        };
-        let maybe_loc = triple.and_then(|t| locator.find(&t));
-        if let Some(t) = &triple {
-            locator.register(t, i);
-        }
-        if let Some(loc) = maybe_loc {
+    locator.scan(data, |i, locs| {
+        if let Some(loc) = locs.back() {
             let dist = i - loc;
             if dist < 129 {
                 symbols.push(Symbol::Length(3));
                 symbols.push(Symbol::Distance(dist));
-                i += 3;
-            } else {
-                symbols.push(Symbol::Literal(b));
-                i += 1;
+                return Progress(3);
             }
-        } else {
-            symbols.push(Symbol::Literal(b));
-            i += 1;
         }
-    }
+        symbols.push(Symbol::Literal(data[i]));
+        return Progress(1);
+    });
+
     symbols.push(Symbol::EndOfBlock);
 
     for s in symbols.iter() {
