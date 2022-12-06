@@ -13,9 +13,21 @@ pub fn fixed_huffman(data: &Vec<u8>) -> Vec<u8> {
         if let Some(loc) = locs.back() {
             let dist = i - loc;
             if dist < 129 {
-                symbols.push(Symbol::Length(3));
-                symbols.push(Symbol::Distance(dist));
-                return Progress(3);
+                let mut len = 0;
+                while let Some(&d) = data.get(i + len) {
+                    if data[loc + len] != d {
+                        break;
+                    }
+                    if len >= Symbol::MAX_LENGTH {
+                        break;
+                    }
+                    len += 1;
+                }
+                if len >= 3 {
+                    symbols.push(Symbol::Length(len));
+                    symbols.push(Symbol::Distance(dist));
+                    return Progress(len);
+                }
             }
         }
         symbols.push(Symbol::Literal(data[i]));
@@ -65,7 +77,7 @@ mod tests {
 
     #[test]
     fn repeat_tests() {
-        let three_times = (5..=8).map(|l| (l, 3));
+        let three_times = (5..=10).chain([15, 26]).map(|l| (l, 3));
         let thousand_times = (1..=4).map(|l| (l, 1000));
         for (l, r) in three_times.chain(thousand_times) {
             let value = "abcdefghijklmnopqrstuvwxyz"[..l].repeat(r);

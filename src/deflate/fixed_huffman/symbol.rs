@@ -7,6 +7,8 @@ pub enum Symbol {
 }
 
 impl Symbol {
+    pub const MAX_LENGTH: usize = 10;
+
     pub fn encode(&self) -> Vec<bool> {
         match self {
             &Symbol::Literal(l) => {
@@ -30,10 +32,10 @@ fn usize_to_bits(x: usize, len: usize) -> Vec<bool> {
 }
 
 fn length_code(l: usize) -> Vec<bool> {
-    if l != 3 {
-        panic!("unsupported length");
+    if l <= Symbol::MAX_LENGTH {
+        return usize_to_bits(257 - 3 + l, 7);
     }
-    usize_to_bits(257 - 256, 7)
+    panic!("unsupported length");
 }
 
 fn distance_code(d: usize) -> Vec<bool> {
