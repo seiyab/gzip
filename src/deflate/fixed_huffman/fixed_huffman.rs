@@ -77,10 +77,10 @@ mod tests {
 
     #[test]
     fn repeat_tests() {
-        let three_times = (5..=10).chain([15, 26]).map(|l| (l, 3));
+        let three_times = (5..=10).chain([15, 25, 50]).map(|l| (l, 3));
         let thousand_times = (1..=4).map(|l| (l, 1000));
         for (l, r) in three_times.chain(thousand_times) {
-            let value = "abcdefghijklmnopqrstuvwxyz"[..l].repeat(r);
+            let value = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[..l].repeat(r);
             let data = value.as_bytes().to_vec();
             let result = fixed_huffman(&data);
             let mut deflator = DeflateDecoder::new(&result[..]);
