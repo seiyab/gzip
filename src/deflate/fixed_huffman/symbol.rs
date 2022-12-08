@@ -8,6 +8,7 @@ pub enum Symbol {
 
 impl Symbol {
     pub const MAX_LENGTH: usize = 114;
+    pub const MAX_DISTANCE: usize = 128;
 
     pub fn encode(&self) -> Vec<bool> {
         match self {
@@ -58,35 +59,22 @@ fn length_code(l: usize) -> Vec<bool> {
 }
 
 fn distance_code(d: usize) -> Vec<bool> {
-    if d < 5 {
-        distance_bits_for(d, 0, 0, 1)
-    } else if d < 9 {
-        distance_bits_for(d, 4, 1, 5)
-    } else if d < 17 {
-        distance_bits_for(d, 6, 2, 9)
-    } else if d < 33 {
-        distance_bits_for(d, 8, 3, 17)
-    } else if d < 65 {
-        distance_bits_for(d, 10, 4, 33)
-    } else if d < 129 {
-        distance_bits_for(d, 12, 5, 65)
-    } else {
+    if d == 0 {
         panic!("unsupported distance")
     }
-}
-
-fn distance_bits_for(
-    dist: usize,
-    group_first_code: usize,
-    group_bits: u32,
-    group_first_dist: usize,
-) -> Vec<bool> {
-    let group_code_size = 2usize.pow(group_bits);
-    let degree_in_group = dist - group_first_dist;
-    let code = group_first_code + degree_in_group / group_code_size;
-    let mut bits = usize_to_bits(code, 5);
-    let mut extra = usize_to_bits(degree_in_group, group_bits as usize);
-    extra.reverse();
-    bits.extend(extra);
-    bits
+    if d < 5 {
+        return usize_to_bits(d - 1, 5);
+    }
+    if d <= Symbol::MAX_DISTANCE {
+        let extra_bits_len = 64 - (d - 1).leading_zeros() - 2;
+        let group_min_distance = (1u32 << (extra_bits_len + 1)) + 1;
+        let group_min_code = 2 + (extra_bits_len * 2);
+        let size_in_group = d as u32 - group_min_distance;
+        let code = group_min_code + (size_in_group >> extra_bits_len);
+        let mut bits = u32_to_bits(code, 5);
+        let extra_bits = u32_to_rev_bits(size_in_group, extra_bits_len);
+        bits.extend(extra_bits);
+        return bits;
+    }
+    panic!("unsupported distance")
 }
