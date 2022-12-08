@@ -37,7 +37,7 @@ fn longest_duplicate<I: Iterator<Item = usize>>(
     let mut distance = 0;
     for loc in refs {
         let dist_candidate = i - loc;
-        if dist_candidate >= 129 {
+        if dist_candidate >= Symbol::MAX_DISTANCE {
             continue;
         }
         let len_candidate = duplicate_length(data, i, loc);
@@ -128,9 +128,9 @@ mod tests {
 
     #[test]
     fn distance_tests() {
-        let ds = (3..=15)
-            .into_iter()
-            .chain([16, 17, 19, 24, 32, 33, 50, 64, 65, 90, 128]);
+        let ds = (3..=15).into_iter().chain([
+            16, 17, 19, 24, 32, 33, 50, 64, 65, 90, 128, 200, 400, 800, 1000,
+        ]);
         for d in ds {
             let value = format!("abc{}abc{}abc", "-".repeat(d - 3), "-".repeat(d - 3));
             let data = value.as_bytes().to_vec();
