@@ -10,19 +10,10 @@ pub fn fixed_huffman(data: &Vec<u8>) -> Vec<u8> {
     let mut symbols: Vec<Symbol> = Vec::new();
     let mut locator = Locator::new();
     locator.scan(data, |i, locs| {
-        if let Some(loc) = locs.back() {
+        if let Some(&loc) = locs.back() {
             let dist = i - loc;
             if dist < 129 {
-                let mut len = 0;
-                while let Some(&d) = data.get(i + len) {
-                    if data[loc + len] != d {
-                        break;
-                    }
-                    if len >= Symbol::MAX_LENGTH {
-                        break;
-                    }
-                    len += 1;
-                }
+                let len = duplicate_length(data, i, loc);
                 if len >= 3 {
                     symbols.push(Symbol::Length(len));
                     symbols.push(Symbol::Distance(dist));
@@ -40,6 +31,25 @@ pub fn fixed_huffman(data: &Vec<u8>) -> Vec<u8> {
         bits.add(s.encode().iter());
     }
     return bits.as_bytes();
+}
+
+fn duplicate_length(data: &Vec<u8>, i: usize, j: usize) -> usize {
+    let mut len = 0;
+    loop {
+        if len >= Symbol::MAX_LENGTH {
+            break;
+        }
+        match (data.get(i + len), data.get(j + len)) {
+            (Some(&x), Some(&y)) => {
+                if x != y {
+                    break;
+                }
+            }
+            _ => break,
+        }
+        len += 1;
+    }
+    return len;
 }
 
 #[cfg(test)]
