@@ -10,16 +10,11 @@ pub fn fixed_huffman(data: &Vec<u8>) -> Vec<u8> {
     let mut symbols: Vec<Symbol> = Vec::new();
     let mut locator = Locator::new();
     locator.scan(data, |i, locs| {
-        if let Some(&loc) = locs.back() {
-            let dist = i - loc;
-            if dist < 129 {
-                let len = duplicate_length(data, i, loc);
-                if len >= 3 {
-                    symbols.push(Symbol::Length(len));
-                    symbols.push(Symbol::Distance(dist));
-                    return Progress(len);
-                }
-            }
+        let (len, dist) = longest_duplicate(data, i, locs.into_iter().rev().take(5).map(|&x| x));
+        if len >= 3 {
+            symbols.push(Symbol::Length(len));
+            symbols.push(Symbol::Distance(dist));
+            return Progress(len);
         }
         symbols.push(Symbol::Literal(data[i]));
         return Progress(1);
@@ -31,6 +26,26 @@ pub fn fixed_huffman(data: &Vec<u8>) -> Vec<u8> {
         bits.add(s.encode().iter());
     }
     return bits.as_bytes();
+}
+
+fn longest_duplicate<I: Iterator<Item = usize>>(
+    data: &Vec<u8>,
+    i: usize,
+    refs: I,
+) -> (usize, usize) {
+    let mut len = 0;
+    let mut distance = 0;
+    for loc in refs {
+        let dist_candidate = i - loc;
+        if dist_candidate >= 129 {
+            continue;
+        }
+        let len_candidate = duplicate_length(data, i, loc);
+        if len_candidate > len {
+            (len, distance) = (len_candidate, dist_candidate);
+        }
+    }
+    return (len, distance);
 }
 
 fn duplicate_length(data: &Vec<u8>, i: usize, j: usize) -> usize {
