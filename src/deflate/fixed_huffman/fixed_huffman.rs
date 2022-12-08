@@ -10,7 +10,7 @@ pub fn fixed_huffman(data: &Vec<u8>) -> Vec<u8> {
     let mut symbols: Vec<Symbol> = Vec::new();
     let mut locator = Locator::new();
     locator.scan(data, |i, locs| {
-        let (len, dist) = longest_duplicate(data, i, locs.into_iter().rev().take(5).map(|&x| x));
+        let (len, dist) = longest_duplicate(data, i, locs.into_iter().rev().take(10).copied());
         if len >= 3 {
             symbols.push(Symbol::Length(len));
             symbols.push(Symbol::Distance(dist));

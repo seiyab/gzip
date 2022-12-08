@@ -22,7 +22,7 @@ impl Locator {
             .or_insert_with(LinkedList::new)
             .push_back(location);
         self.queue.push_back(*triple);
-        while self.queue.len() > 1000 {
+        while self.queue.len() > 20_000 {
             if let Some(triple) = self.queue.pop_front() {
                 self.locations.entry(triple).and_modify(|l| {
                     l.pop_front();

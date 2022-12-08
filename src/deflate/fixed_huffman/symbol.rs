@@ -8,7 +8,7 @@ pub enum Symbol {
 
 impl Symbol {
     pub const MAX_LENGTH: usize = 114;
-    pub const MAX_DISTANCE: usize = 1024;
+    pub const MAX_DISTANCE: usize = 20_000;
 
     pub fn encode(&self) -> Vec<bool> {
         match self {
