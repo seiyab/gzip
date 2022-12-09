@@ -1,5 +1,5 @@
 use super::crc;
-use crate::deflate::{deflate, fixed_huffman};
+use crate::deflate::{deflate, huffman};
 use chrono::{DateTime, TimeZone};
 
 pub fn gzip<Tz: TimeZone>(data: &Vec<u8>, mtime: &DateTime<Tz>) -> Vec<u8> {
@@ -11,7 +11,7 @@ fn member<Tz: TimeZone>(data: &Vec<u8>, mtime: &DateTime<Tz>) -> Vec<u8> {
     if std::option_env!("USE_RAW") == Some("1") {
         m.extend(deflate(&data));
     } else {
-        m.extend(fixed_huffman(&data));
+        m.extend(huffman(&data));
     }
     m.extend(crc::crc(&data));
     m.extend(data.len().to_le_bytes().iter().take(4));

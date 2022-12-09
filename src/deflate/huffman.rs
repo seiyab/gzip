@@ -4,7 +4,7 @@ use super::{
 };
 use crate::deflate::bits::Bits;
 
-pub fn fixed_huffman(data: &Vec<u8>) -> Vec<u8> {
+pub fn huffman(data: &Vec<u8>) -> Vec<u8> {
     let mut bits = Bits::new();
     bits.add([true, true, false].iter());
     let mut symbols: Vec<Symbol> = Vec::new();
@@ -69,18 +69,18 @@ fn duplicate_length(data: &Vec<u8>, i: usize, j: usize) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use super::fixed_huffman;
+    use super::huffman;
     use flate2::read::DeflateDecoder;
     use std::io::Read;
 
-    macro_rules! fixed_huffman_tests {
+    macro_rules! huffman_tests {
         ($($name:ident: $value:expr,)*) => {
         $(
             #[test]
             fn $name() {
                 let value = $value;
                 let data = value.as_bytes().to_vec();
-                let result = fixed_huffman(&data);
+                let result = huffman(&data);
                 let mut deflator = DeflateDecoder::new(&result[..]);
                 let mut s = String::new();
                 if let Err(e) = deflator.read_to_string(&mut s) {
@@ -93,7 +93,7 @@ mod tests {
         }
     }
 
-    fixed_huffman_tests! {
+    huffman_tests! {
         no_duplicate: "foobar",
         with_some_duplicate: "foobar123foobar4foobar4xyz",
         with_duplicate_10_characters: "0123456789_0123456789",
@@ -107,7 +107,7 @@ mod tests {
         for (l, r) in three_times.chain(thousand_times) {
             let value = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[..l].repeat(r);
             let data = value.as_bytes().to_vec();
-            let result = fixed_huffman(&data);
+            let result = huffman(&data);
             let mut deflator = DeflateDecoder::new(&result[..]);
             let mut s = String::new();
             if let Err(e) = deflator.read_to_string(&mut s) {
@@ -134,7 +134,7 @@ mod tests {
         for d in ds {
             let value = format!("abc{}abc{}abc", "-".repeat(d - 3), "-".repeat(d - 3));
             let data = value.as_bytes().to_vec();
-            let result = fixed_huffman(&data);
+            let result = huffman(&data);
             let mut deflator = DeflateDecoder::new(&result[..]);
             let mut s = String::new();
             if let Err(e) = deflator.read_to_string(&mut s) {
@@ -146,9 +146,9 @@ mod tests {
     }
 
     #[test]
-    fn fixed_huffman_256_bytes() {
+    fn huffman_256_bytes() {
         let data = (0..255u8).collect();
-        let result = fixed_huffman(&data);
+        let result = huffman(&data);
         let mut deflater = DeflateDecoder::new(&result[..]);
         let mut buf = Vec::new();
         if let Err(e) = deflater.read_to_end(&mut buf) {
@@ -160,7 +160,7 @@ mod tests {
     #[test]
     fn repeated_3_chars_shrinks() {
         let data = "abc".repeat(1000).as_bytes().to_vec();
-        let result = fixed_huffman(&data);
+        let result = huffman(&data);
         assert!(result.len() < data.len());
         let mut deflater = DeflateDecoder::new(&result[..]);
         let mut buf = Vec::new();

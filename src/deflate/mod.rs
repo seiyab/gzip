@@ -1,6 +1,8 @@
 mod bits;
 mod deflate;
-mod fixed_huffman;
+mod huffman;
+mod locator;
+mod symbol;
 
 pub use deflate::deflate;
-pub use fixed_huffman::fixed_huffman;
+pub use huffman::huffman;
