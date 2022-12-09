@@ -7,6 +7,14 @@ use crate::deflate::bits::Bits;
 pub fn huffman(data: &Vec<u8>) -> Vec<u8> {
     let mut bits = Bits::new();
     bits.add([true, true, false].iter());
+
+    for s in symbolize(data).iter() {
+        bits.add(s.encode().iter());
+    }
+    return bits.as_bytes();
+}
+
+fn symbolize(data: &Vec<u8>) -> Vec<Symbol> {
     let mut symbols: Vec<Symbol> = Vec::new();
     let mut locator = Locator::new();
     locator.scan(data, |i, locs| {
@@ -22,10 +30,7 @@ pub fn huffman(data: &Vec<u8>) -> Vec<u8> {
 
     symbols.push(Symbol::EndOfBlock);
 
-    for s in symbols.iter() {
-        bits.add(s.encode().iter());
-    }
-    return bits.as_bytes();
+    return symbols;
 }
 
 fn longest_duplicate<I: Iterator<Item = usize>>(

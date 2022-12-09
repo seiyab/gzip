@@ -1,8 +1,8 @@
 mod bits;
 mod deflate;
-mod huffman;
 mod locator;
 mod symbol;
+mod symbolize;
 
 pub use deflate::deflate;
-pub use huffman::huffman;
+pub use symbolize::huffman;
