@@ -1,3 +1,5 @@
+use super::alphabet_encoder::AlphabetEncoder;
+
 #[derive(Debug)]
 pub enum Symbol {
     Literal(u8),
@@ -10,19 +12,11 @@ impl Symbol {
     pub const MAX_LENGTH: usize = 114;
     pub const MAX_DISTANCE: usize = 20_000;
 
-    pub fn encode(&self) -> Vec<bool> {
+    pub fn encode(&self, alphabet_encoder: &AlphabetEncoder) -> Vec<bool> {
         match self {
-            &Symbol::Literal(l) => {
-                if l <= 143 {
-                    let c = 0b00110000 + (l as usize);
-                    usize_to_bits(c, 8)
-                } else {
-                    let c = 0b110010000 - 144 + (l as usize);
-                    usize_to_bits(c, 9)
-                }
-            }
-            &Symbol::EndOfBlock => vec![false; 7],
-            &Symbol::Length(l) => length_code(l),
+            &Symbol::Literal(l) => alphabet_encoder.encode(l as usize).bits(),
+            &Symbol::EndOfBlock => alphabet_encoder.encode(256).bits(),
+            &Symbol::Length(l) => length_code(l, alphabet_encoder),
             &Symbol::Distance(d) => distance_code(d),
         }
     }
@@ -40,9 +34,9 @@ fn u32_to_rev_bits(x: u32, len: u32) -> Vec<bool> {
     (0..len).map(|i| ((x >> i) & 1) > 0).collect()
 }
 
-fn length_code(l: usize) -> Vec<bool> {
+fn length_code(l: usize, alphabet_encoder: &AlphabetEncoder) -> Vec<bool> {
     if l < 11 {
-        return usize_to_bits(257 - 3 + l, 7);
+        return alphabet_encoder.encode(257 - 3 + l).bits();
     }
     if l > Symbol::MAX_LENGTH {
         panic!("unsupported length")
@@ -52,7 +46,7 @@ fn length_code(l: usize) -> Vec<bool> {
     let group_min_code = 261 + (extra_bits_len * 4);
     let size_in_group = l as u32 - group_min_length;
     let code = group_min_code + (size_in_group >> extra_bits_len);
-    let mut bits = u32_to_bits(code, 7);
+    let mut bits = alphabet_encoder.encode(code as usize).bits();
     let extra_bits = u32_to_rev_bits(size_in_group, extra_bits_len);
     bits.extend(extra_bits);
     return bits;

@@ -36,6 +36,25 @@ impl Bits {
     }
 }
 
+#[derive(Clone)]
+pub struct ShortBits {
+    body: u64,
+    size: u8,
+}
+
+impl ShortBits {
+    pub fn new(body: u64, size: u8) -> Self {
+        Self { body, size }
+    }
+
+    pub fn bits(&self) -> Vec<bool> {
+        (0..self.size)
+            .map(|i| ((self.body >> i) & 1) > 0)
+            .rev()
+            .collect()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Bits;

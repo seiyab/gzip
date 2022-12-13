@@ -1,4 +1,5 @@
 use super::{
+    code_length_table::CodeLengthTable,
     locator::{Locator, Progress},
     symbol::Symbol,
 };
@@ -7,9 +8,10 @@ use crate::deflate::bits::Bits;
 pub fn huffman(data: &Vec<u8>) -> Vec<u8> {
     let mut bits = Bits::new();
     bits.add([true, true, false].iter());
+    let encoder = CodeLengthTable::default().build_encoder();
 
     for s in symbolize(data).iter() {
-        bits.add(s.encode().iter());
+        bits.add(s.encode(&encoder).iter());
     }
     return bits.as_bytes();
 }
