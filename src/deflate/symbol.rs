@@ -4,8 +4,7 @@ use super::alphabet_encoder::AlphabetEncoder;
 pub enum Symbol {
     Literal(u8),
     EndOfBlock,
-    Length(usize),
-    Distance(usize),
+    Reference { length: usize, distance: usize },
 }
 
 impl Symbol {
@@ -16,8 +15,12 @@ impl Symbol {
         match self {
             &Symbol::Literal(l) => alphabet_encoder.encode(l as usize).bits(),
             &Symbol::EndOfBlock => alphabet_encoder.encode(256).bits(),
-            &Symbol::Length(l) => length_code(l, alphabet_encoder),
-            &Symbol::Distance(d) => distance_code(d),
+            &Symbol::Reference { length, distance } => {
+                let mut bits: Vec<bool> = Vec::new();
+                bits.extend(length_code(length, alphabet_encoder));
+                bits.extend(distance_code(distance));
+                bits
+            }
         }
     }
 }

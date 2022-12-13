@@ -20,11 +20,11 @@ fn symbolize(data: &Vec<u8>) -> Vec<Symbol> {
     let mut symbols: Vec<Symbol> = Vec::new();
     let mut locator = Locator::new();
     locator.scan(data, |i, locs| {
-        let (len, dist) = longest_duplicate(data, i, locs.into_iter().rev().take(10).copied());
-        if len >= 3 {
-            symbols.push(Symbol::Length(len));
-            symbols.push(Symbol::Distance(dist));
-            return Progress(len);
+        let (length, distance) =
+            longest_duplicate(data, i, locs.into_iter().rev().take(10).copied());
+        if length >= 3 {
+            symbols.push(Symbol::Reference { length, distance });
+            return Progress(length);
         }
         symbols.push(Symbol::Literal(data[i]));
         return Progress(1);
