@@ -9,7 +9,7 @@ pub enum Symbol {
 }
 
 impl Symbol {
-    pub const MAX_LENGTH: usize = 114;
+    pub const MAX_LENGTH: usize = 257;
     pub const MAX_DISTANCE: usize = 20_000;
 
     pub fn encode(&self, alphabet_encoder: &AlphabetEncoder) -> Vec<bool> {
