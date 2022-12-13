@@ -47,11 +47,27 @@ impl ShortBits {
         Self { body, size }
     }
 
+    pub fn rev(rev_body: u64, size: u8) -> Self {
+        let mut body: u64 = 0;
+        for i in 0..size {
+            body = body << 1;
+            body += (rev_body >> i) & 1
+        }
+        Self { body, size }
+    }
+
     pub fn bits(&self) -> Vec<bool> {
         (0..self.size)
             .map(|i| ((self.body >> i) & 1) > 0)
             .rev()
             .collect()
+    }
+
+    pub fn concat(&self, another: &Self) -> Self {
+        Self {
+            body: (self.body << another.size) + another.body,
+            size: self.size + another.size,
+        }
     }
 }
 
