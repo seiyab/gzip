@@ -13,8 +13,8 @@ impl Bits {
         }
     }
 
-    pub fn add<'a, I: Iterator<Item = &'a bool>>(&mut self, bits: I) {
-        for &b in bits {
+    pub fn add<I: Iterator<Item = bool>>(&mut self, bits: I) {
+        for b in bits {
             if b {
                 self.bits = self.bits + (1 << self.i);
             }
@@ -25,6 +25,14 @@ impl Bits {
                 self.bits = 0;
             }
         }
+    }
+
+    pub fn extend(&mut self, another: &Self) {
+        for byte in another.bytes.iter() {
+            self.bytes.push(self.bits + (byte << self.i));
+            self.bits = byte >> (8 - self.i);
+        }
+        self.add((0..another.i).map(|i| (another.bits >> i) & 1 > 0));
     }
 
     pub fn as_bytes(mut self) -> Vec<u8> {
@@ -43,11 +51,11 @@ pub struct ShortBits {
 }
 
 impl ShortBits {
-    pub fn new(body: u64, size: u8) -> Self {
+    pub fn code(body: u64, size: u8) -> Self {
         Self { body, size }
     }
 
-    pub fn rev(rev_body: u64, size: u8) -> Self {
+    pub fn data(rev_body: u64, size: u8) -> Self {
         let mut body: u64 = 0;
         for i in 0..size {
             body = body << 1;
@@ -80,7 +88,7 @@ mod tests {
     #[test]
     fn bits_add() {
         let mut b = Bits::new();
-        b.add([L].iter());
+        b.add([L].iter().copied());
         assert_eq!(vec![1], b.as_bytes());
 
         let mut b = Bits::new();
@@ -91,12 +99,19 @@ mod tests {
                 [O, O, O, O, L, O, O, O],
             ]
             .concat()
-            .iter(),
+            .iter()
+            .copied(),
         );
         assert_eq!(vec![1, 2, 16], b.as_bytes());
 
         let mut b = Bits::new();
-        b.add([L; 3].iter().chain([O; 2].iter()).chain([L; 5].iter()));
+        b.add(
+            [L; 3]
+                .iter()
+                .copied()
+                .chain([O; 2].iter().copied())
+                .chain([L; 5].iter().copied()),
+        );
         assert_eq!(vec![0b11100111, 0b11], b.as_bytes());
     }
 }

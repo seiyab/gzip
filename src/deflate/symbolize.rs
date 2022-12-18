@@ -7,11 +7,17 @@ use crate::deflate::bits::Bits;
 
 pub fn huffman(data: &Vec<u8>) -> Vec<u8> {
     let mut bits = Bits::new();
-    bits.add([true, true, false].iter());
-    let encoder = CodeLengthTable::default().build_encoder();
+    bits.add([true, false, true].iter().copied());
+    let lit_table = CodeLengthTable::flat(286);
+    let dist_table = CodeLengthTable::flat(30);
+    bits.extend(&CodeLengthTable::encode(&lit_table, &dist_table));
 
     for s in symbolize(data).iter() {
-        bits.add(s.encode(&encoder).iter());
+        bits.add(
+            s.encode(&lit_table.build_encoder(), &dist_table.build_encoder())
+                .iter()
+                .copied(),
+        );
     }
     return bits.as_bytes();
 }
