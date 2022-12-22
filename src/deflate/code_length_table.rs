@@ -1,4 +1,4 @@
-use std::mem::size_of;
+use std::{cmp::Ordering, mem::size_of, ops::Add};
 
 use super::{
     alphabet_encoder::AlphabetEncoder,
@@ -10,6 +10,64 @@ pub struct CodeLengthTable {
 }
 
 impl CodeLengthTable {
+    pub fn analyze(weights: &Vec<u64>, max_length: u8) -> Self {
+        let mut stat: Vec<(usize, u64)> = weights
+            .iter()
+            .copied()
+            .enumerate()
+            .filter(|&(_, w)| w > 0)
+            .collect();
+        stat.sort_by(|l, r| match l.1.cmp(&r.1) {
+            Ordering::Equal => l.0.cmp(&r.0),
+            x => x.reverse(),
+        });
+
+        let mut table = vec![0u8; weights.len()];
+        for &(i, len) in Self::decide_code_lengths(&stat, max_length, 0).iter() {
+            table[i] = len;
+        }
+        return Self { table };
+    }
+
+    fn decide_code_lengths(
+        stat: &Vec<(usize, u64)>,
+        max_length: u8,
+        depth: u8,
+    ) -> Vec<(usize, u8)> {
+        if stat.len() <= 1 {
+            return stat.iter().map(|(i, _)| (*i, depth)).collect();
+        }
+        if depth > max_length {
+            panic!("failed to calculate code length (depth {depth} > max_length {max_length})");
+        }
+        let total_weight = stat.iter().map(|(_, w)| *w).fold(0, Add::add);
+        let cap = 1 << (max_length - depth);
+        let side_max_cap = cap / 2;
+        let mut left_weight = stat[0].1;
+        let mut i = 1usize;
+        for &(_, w) in stat[1..].iter() {
+            if stat.len() - i >= side_max_cap {
+                continue;
+            }
+            if i >= side_max_cap {
+                break;
+            }
+            if left_weight + w / 2 >= total_weight / 2 {
+                break;
+            }
+            left_weight += w;
+            i += 1;
+        }
+
+        let mut ret = Self::decide_code_lengths(&stat[..i].to_vec(), max_length, depth + 1);
+        ret.extend(Self::decide_code_lengths(
+            &stat[i..].to_vec(),
+            max_length,
+            depth + 1,
+        ));
+        return ret;
+    }
+
     pub fn flat(size: usize) -> Self {
         let longer_length: u8 = (size_of::<usize>() as u8) * 8 - size.leading_zeros() as u8;
         let ll_cap: usize = 1usize << longer_length;

@@ -8,11 +8,16 @@ use crate::deflate::bits::Bits;
 pub fn huffman(data: &Vec<u8>) -> Vec<u8> {
     let mut bits = Bits::new();
     bits.add([true, false, true].iter().copied());
-    let lit_table = CodeLengthTable::flat(286);
+    let symbols = symbolize(data);
+    let mut lit_weights = vec![0; 286];
+    for s in symbols.iter() {
+        lit_weights[s.code()] += 1;
+    }
+    let lit_table = CodeLengthTable::analyze(&lit_weights, 15);
     let dist_table = CodeLengthTable::flat(30);
     bits.extend(&CodeLengthTable::encode(&lit_table, &dist_table));
 
-    for s in symbolize(data).iter() {
+    for s in symbols.iter() {
         bits.add(
             s.encode(&lit_table.build_encoder(), &dist_table.build_encoder())
                 .iter()
