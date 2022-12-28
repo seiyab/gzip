@@ -3,6 +3,7 @@ use std::{cmp::Ordering, mem::size_of, ops::Add};
 use super::{
     alphabet_encoder::AlphabetEncoder,
     bits::{Bits, ShortBits},
+    symbolize_code_length::symbolize_code_length,
 };
 
 pub struct CodeLengthTable {
@@ -93,12 +94,16 @@ impl CodeLengthTable {
             let l = lc_table.table[cl];
             bits.add(ShortBits::data(l.into(), 3).bits().iter().copied());
         }
-        for &l in lit_table.table.iter() {
-            bits.add(lc_encoder.encode(l as usize).bits().iter().copied());
+
+        for s in symbolize_code_length(lit_table.table.iter()).iter() {
+            bits.add(lc_encoder.encode(s.code()).bits().iter().copied());
+            bits.add(s.additional_bits().bits().iter().copied());
         }
-        for &l in dist_table.table.iter() {
-            bits.add(lc_encoder.encode(l as usize).bits().iter().copied());
+        for s in symbolize_code_length(dist_table.table.iter()).iter() {
+            bits.add(lc_encoder.encode(s.code()).bits().iter().copied());
+            bits.add(s.additional_bits().bits().iter().copied());
         }
+
         return bits;
     }
 

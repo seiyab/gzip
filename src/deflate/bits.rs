@@ -64,6 +64,10 @@ impl ShortBits {
         Self { body, size }
     }
 
+    pub fn zero() -> Self {
+        Self { body: 0, size: 0 }
+    }
+
     pub fn bits(&self) -> Vec<bool> {
         (0..self.size)
             .map(|i| ((self.body >> i) & 1) > 0)
