@@ -11,7 +11,7 @@ pub struct CodeLengthTable {
 }
 
 impl CodeLengthTable {
-    pub fn analyze(weights: &Vec<u64>, max_length: u8) -> Self {
+    pub fn analyze(weights: &[u64], max_length: u8) -> Self {
         let mut stat: Vec<(usize, u64)> = weights
             .iter()
             .copied()
@@ -30,12 +30,13 @@ impl CodeLengthTable {
         return Self { table };
     }
 
-    fn decide_code_lengths(
-        stat: &Vec<(usize, u64)>,
-        max_length: u8,
-        depth: u8,
-    ) -> Vec<(usize, u8)> {
+    fn decide_code_lengths(stat: &[(usize, u64)], max_length: u8, depth: u8) -> Vec<(usize, u8)> {
         if stat.len() <= 1 {
+            if depth == 0 && stat.len() == 1 {
+                let i = stat[0].0;
+                let another = if i == 0 { 1 } else { i - 1 };
+                return vec![(i, 1), (another, 1)];
+            }
             return stat.iter().map(|(i, _)| (*i, depth)).collect();
         }
         if depth > max_length {

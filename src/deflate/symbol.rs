@@ -46,6 +46,32 @@ impl Symbol {
         }
     }
 
+    pub fn dist_code(&self) -> Option<usize> {
+        match self {
+            &Symbol::Literal(_) => None,
+            &Symbol::EndOfBlock => None,
+            &Symbol::Reference {
+                length: _,
+                distance,
+            } => {
+                if distance == 0 {
+                    panic!("unsupported distance");
+                }
+                if distance < 5 {
+                    Some(distance - 1)
+                } else if distance <= Symbol::MAX_DISTANCE {
+                    let extra_bits_len = 64 - (distance - 1).leading_zeros() - 2;
+                    let group_min_distance = (1u32 << (extra_bits_len + 1)) + 1;
+                    let group_min_code = 2 + (extra_bits_len * 2);
+                    let size_in_group = distance as u32 - group_min_distance;
+                    Some((group_min_code + (size_in_group >> extra_bits_len)) as usize)
+                } else {
+                    panic!("unsupported distance")
+                }
+            }
+        }
+    }
+
     pub fn additional_bits(&self, dist_encoder: &AlphabetEncoder) -> ShortBits {
         match self {
             &Symbol::Literal(_) => ShortBits::code(0, 0),

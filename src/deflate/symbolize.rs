@@ -14,7 +14,13 @@ pub fn huffman(data: &Vec<u8>) -> Vec<u8> {
         lit_weights[s.code()] += 1;
     }
     let lit_table = CodeLengthTable::analyze(&lit_weights, 15);
-    let dist_table = CodeLengthTable::flat(30);
+    let mut dist_weights = vec![0; 30];
+    for s in symbols.iter() {
+        if let Some(c) = s.dist_code() {
+            dist_weights[c] += 1;
+        }
+    }
+    let dist_table = CodeLengthTable::analyze(&dist_weights, 15);
     bits.extend(&CodeLengthTable::encode(&lit_table, &dist_table));
 
     for s in symbols.iter() {
