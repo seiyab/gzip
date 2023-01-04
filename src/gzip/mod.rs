@@ -1,4 +1,4 @@
 mod crc;
 mod gzip;
 
-pub use gzip::gzip;
+pub use self::gzip::gzip;

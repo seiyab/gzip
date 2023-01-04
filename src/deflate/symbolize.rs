@@ -33,7 +33,7 @@ pub fn huffman(data: &Vec<u8>) -> Vec<u8> {
     return bits.as_bytes();
 }
 
-fn symbolize(data: &Vec<u8>) -> Vec<Symbol> {
+pub fn symbolize(data: &Vec<u8>) -> Vec<Symbol> {
     let mut symbols: Vec<Symbol> = Vec::new();
     let mut locator = Locator::new();
     locator.scan(data, |i, locs| {

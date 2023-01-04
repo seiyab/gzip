@@ -9,4 +9,6 @@ mod symbolize;
 mod symbolize_code_length;
 
 pub use deflate::deflate;
+pub use symbol::Symbol;
 pub use symbolize::huffman;
+pub use symbolize::symbolize;
