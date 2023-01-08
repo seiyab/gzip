@@ -1,7 +1,9 @@
-use super::dynamic_huffman::dynamic_huffman;
+use super::{bits::Bits, dynamic_huffman::dynamic_huffman};
 
-pub fn deflate(data: &Vec<u8>) -> Vec<u8> {
-    dynamic_huffman(data)
+pub fn deflate(data: &[u8]) -> Vec<u8> {
+    let (mut out, rest) = dynamic_huffman(data, Bits::new()).drain_bytes();
+    out.push(rest.last());
+    out
 }
 
 #[cfg(test)]
@@ -25,7 +27,7 @@ mod tests {
 
     #[test]
     fn read_deflate_256_bytes() {
-        let data = (0..255u8).collect();
+        let data = (0..255u8).collect::<Vec<_>>();
         let result = deflate(&data);
         let mut deflater = DeflateDecoder::new(&result[..]);
         let mut buf = Vec::new();

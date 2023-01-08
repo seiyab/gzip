@@ -31,7 +31,7 @@ impl Locator {
         }
     }
 
-    pub fn scan<F>(&mut self, data: &Vec<u8>, mut f: F)
+    pub fn scan<F>(&mut self, data: &[u8], mut f: F)
     where
         F: FnMut(usize, &LinkedList<usize>) -> Progress,
     {

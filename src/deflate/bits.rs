@@ -35,12 +35,21 @@ impl Bits {
         self.add((0..another.i).map(|i| (another.bits >> i) & 1 > 0));
     }
 
-    pub fn as_bytes(mut self) -> Vec<u8> {
-        if self.i == 0 {
-            return self.bytes;
-        }
-        self.bytes.push(self.bits);
-        return self.bytes;
+    pub fn drain_bytes(self) -> (Vec<u8>, Self) {
+        let bytes = self.bytes;
+        return (
+            bytes,
+            Self {
+                bytes: Vec::new(),
+                bits: self.bits,
+                i: self.i,
+            },
+        );
+    }
+
+    pub fn last(self) -> u8 {
+        assert_eq!(0, self.bytes.len());
+        self.bits
     }
 }
 
@@ -80,42 +89,5 @@ impl ShortBits {
             body: (self.body << another.size) + another.body,
             size: self.size + another.size,
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::Bits;
-    const O: bool = false;
-    const L: bool = true;
-
-    #[test]
-    fn bits_add() {
-        let mut b = Bits::new();
-        b.add([L].iter().copied());
-        assert_eq!(vec![1], b.as_bytes());
-
-        let mut b = Bits::new();
-        b.add(
-            [
-                [L, O, O, O, O, O, O, O],
-                [O, L, O, O, O, O, O, O],
-                [O, O, O, O, L, O, O, O],
-            ]
-            .concat()
-            .iter()
-            .copied(),
-        );
-        assert_eq!(vec![1, 2, 16], b.as_bytes());
-
-        let mut b = Bits::new();
-        b.add(
-            [L; 3]
-                .iter()
-                .copied()
-                .chain([O; 2].iter().copied())
-                .chain([L; 5].iter().copied()),
-        );
-        assert_eq!(vec![0b11100111, 0b11], b.as_bytes());
     }
 }

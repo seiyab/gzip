@@ -2,10 +2,10 @@ use super::bits::Bits;
 use super::code_length_table::CodeLengthTable;
 use super::symbolize;
 
-pub fn dynamic_huffman(data: &Vec<u8>) -> Vec<u8> {
-    let mut bits = Bits::new();
+pub fn dynamic_huffman(input: &[u8], output: Bits) -> Bits {
+    let mut bits = output;
     bits.add([true, false, true].iter().copied());
-    let symbols = symbolize(data);
+    let symbols = symbolize(input);
     let mut lit_weights = vec![0; 286];
     for s in symbols.iter() {
         lit_weights[s.code()] += 1;
@@ -27,11 +27,13 @@ pub fn dynamic_huffman(data: &Vec<u8>) -> Vec<u8> {
                 .copied(),
         );
     }
-    return bits.as_bytes();
+    return bits;
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::deflate::bits::Bits;
+
     use super::dynamic_huffman;
     use flate2::read::DeflateDecoder;
     use std::io::Read;
@@ -46,10 +48,10 @@ mod tests {
         ];
         for input in cases.into_iter() {
             let data = input.as_bytes().to_vec();
-            let result = dynamic_huffman(&data);
-            let mut deflator = DeflateDecoder::new(&result[..]);
+            let result = deflate(&data);
+            let mut inflator = DeflateDecoder::new(&result[..]);
             let mut s = String::new();
-            if let Err(e) = deflator.read_to_string(&mut s) {
+            if let Err(e) = inflator.read_to_string(&mut s) {
                 panic!("{e:#?}")
             }
 
@@ -64,10 +66,10 @@ mod tests {
         for (l, r) in three_times.chain(thousand_times) {
             let value = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[..l].repeat(r);
             let data = value.as_bytes().to_vec();
-            let result = dynamic_huffman(&data);
-            let mut deflator = DeflateDecoder::new(&result[..]);
+            let result = deflate(&data);
+            let mut inflator = DeflateDecoder::new(&result[..]);
             let mut s = String::new();
-            if let Err(e) = deflator.read_to_string(&mut s) {
+            if let Err(e) = inflator.read_to_string(&mut s) {
                 panic!("error: {e:#?}, length: {l}, repeat: {r}")
             }
 
@@ -91,10 +93,10 @@ mod tests {
         for d in ds {
             let value = format!("abc{}abc{}abc", "-".repeat(d - 3), "-".repeat(d - 3));
             let data = value.as_bytes().to_vec();
-            let result = dynamic_huffman(&data);
-            let mut deflator = DeflateDecoder::new(&result[..]);
+            let result = deflate(&data);
+            let mut inflator = DeflateDecoder::new(&result[..]);
             let mut s = String::new();
-            if let Err(e) = deflator.read_to_string(&mut s) {
+            if let Err(e) = inflator.read_to_string(&mut s) {
                 panic!("{e:#?}")
             }
 
@@ -104,8 +106,8 @@ mod tests {
 
     #[test]
     fn huffman_256_bytes() {
-        let data = (0..255u8).collect();
-        let result = dynamic_huffman(&data);
+        let data = (0..255u8).collect::<Vec<_>>();
+        let result = deflate(&data);
         let mut deflater = DeflateDecoder::new(&result[..]);
         let mut buf = Vec::new();
         if let Err(e) = deflater.read_to_end(&mut buf) {
@@ -117,7 +119,7 @@ mod tests {
     #[test]
     fn repeated_3_chars_shrinks() {
         let data = "abc".repeat(1000).as_bytes().to_vec();
-        let result = dynamic_huffman(&data);
+        let result = deflate(&data);
         assert!(result.len() < data.len());
         let mut deflater = DeflateDecoder::new(&result[..]);
         let mut buf = Vec::new();
@@ -125,5 +127,11 @@ mod tests {
             panic!("{e:#?}")
         }
         assert_eq!(&data, &buf);
+    }
+
+    fn deflate(data: &[u8]) -> Vec<u8> {
+        let (mut out, rest) = dynamic_huffman(data, Bits::new()).drain_bytes();
+        out.push(rest.last());
+        out
     }
 }

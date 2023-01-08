@@ -3,7 +3,7 @@ use super::{
     symbol::Symbol,
 };
 
-pub fn symbolize(data: &Vec<u8>) -> Vec<Symbol> {
+pub fn symbolize(data: &[u8]) -> Vec<Symbol> {
     let mut symbols: Vec<Symbol> = Vec::new();
     let mut locator = Locator::new();
     locator.scan(data, |i, locs| {
@@ -22,11 +22,7 @@ pub fn symbolize(data: &Vec<u8>) -> Vec<Symbol> {
     return symbols;
 }
 
-fn longest_duplicate<I: Iterator<Item = usize>>(
-    data: &Vec<u8>,
-    i: usize,
-    refs: I,
-) -> (usize, usize) {
+fn longest_duplicate<I: Iterator<Item = usize>>(data: &[u8], i: usize, refs: I) -> (usize, usize) {
     let mut len = 0;
     let mut distance = 0;
     for loc in refs {
@@ -42,7 +38,7 @@ fn longest_duplicate<I: Iterator<Item = usize>>(
     return (len, distance);
 }
 
-fn duplicate_length(data: &Vec<u8>, i: usize, j: usize) -> usize {
+fn duplicate_length(data: &[u8], i: usize, j: usize) -> usize {
     let mut len = 0;
     loop {
         if len >= Symbol::MAX_LENGTH {
