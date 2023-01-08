@@ -36,31 +36,25 @@ mod tests {
     use flate2::read::DeflateDecoder;
     use std::io::Read;
 
-    macro_rules! huffman_tests {
-        ($($name:ident: $value:expr,)*) => {
-        $(
-            #[test]
-            fn $name() {
-                let value = $value;
-                let data = value.as_bytes().to_vec();
-                let result = dynamic_huffman(&data);
-                let mut deflator = DeflateDecoder::new(&result[..]);
-                let mut s = String::new();
-                if let Err(e) = deflator.read_to_string(&mut s) {
-                    panic!("{e:#?}")
-                }
-
-                assert_eq!(value, s);
+    #[test]
+    fn literal_tests() {
+        let cases = [
+            "foobar",
+            "foobar123foobar4foobar4xyz",
+            "0123456789_0123456789",
+            "this is a",
+        ];
+        for input in cases.into_iter() {
+            let data = input.as_bytes().to_vec();
+            let result = dynamic_huffman(&data);
+            let mut deflator = DeflateDecoder::new(&result[..]);
+            let mut s = String::new();
+            if let Err(e) = deflator.read_to_string(&mut s) {
+                panic!("{e:#?}")
             }
-        )*
-        }
-    }
 
-    huffman_tests! {
-        no_duplicate: "foobar",
-        with_some_duplicate: "foobar123foobar4foobar4xyz",
-        with_duplicate_10_characters: "0123456789_0123456789",
-        with_some_duplicate_2: "this is a",
+            assert_eq!(input, s);
+        }
     }
 
     #[test]
