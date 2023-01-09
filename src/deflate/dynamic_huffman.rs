@@ -20,8 +20,11 @@ pub fn dynamic_huffman(input: &[u8], output: Bits) -> Bits {
     let dist_table = CodeLengthTable::analyze(&dist_weights, 15);
     bits.extend(&CodeLengthTable::encode(&lit_table, &dist_table));
 
+    let lit_encoder = lit_table.build_encoder();
+    let dist_encoder = dist_table.build_encoder();
+
     for s in symbols.iter() {
-        bits.append(&s.encode(&lit_table.build_encoder(), &dist_table.build_encoder()));
+        bits.append(&s.encode(&lit_encoder, &dist_encoder));
     }
     return bits;
 }
