@@ -48,7 +48,7 @@ impl CodeLengthTable {
         let mut left_weight = stat[0].1;
         let mut i = 1usize;
         for &(_, w) in stat[1..].iter() {
-            if stat.len() - i >= side_max_cap {
+            if stat.len() - i > side_max_cap {
                 i += 1;
                 continue;
             }
