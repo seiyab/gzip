@@ -1,6 +1,9 @@
 use std::io::{BufRead, BufReader, Read, Write};
 
-use super::{bits::Bits, dynamic_huffman::dynamic_huffman};
+use super::{
+    bits::{Bits, ShortBits},
+    dynamic_huffman::dynamic_huffman,
+};
 
 pub fn deflate<R: Read, W: Write>(mut output: W, input: R, buf_size: usize) {
     let mut reader = BufReader::with_capacity(buf_size, input);
@@ -19,7 +22,16 @@ pub fn deflate<R: Read, W: Write>(mut output: W, input: R, buf_size: usize) {
         };
         reader.consume(length);
     }
-    output.write_all(&[bits.last()]).unwrap();
+    let (out, rest) = last_block(bits).drain_bytes();
+    output.write_all(&out).unwrap();
+    output.write_all(&[rest.last()]).unwrap();
+}
+
+fn last_block(bits: Bits) -> Bits {
+    let mut out = bits;
+    out.add([true, true, false].iter().copied());
+    out.append(&ShortBits::code(0, 7));
+    out
 }
 
 #[cfg(test)]

@@ -56,31 +56,37 @@ mod tests {
 
     #[test]
     fn read_gzip() {
-        let cases = ["foobar", "foobar123foo1234foobar"];
-        for input in cases.into_iter() {
-            let data = input.as_bytes().to_vec();
-            let result = gzip_buf(&data);
-            let mut gunzipper = GzDecoder::new(&result[..]);
-            let mut s = String::new();
-            if let Err(e) = gunzipper.read_to_string(&mut s) {
-                panic!("{e:#?}")
-            }
+        let buf_sizes = [1024, 4, 8];
+        let inputs = ["foobar", "foobar123foo1234foobar"];
+        for buf_size in buf_sizes.into_iter() {
+            for input in inputs.into_iter() {
+                let data = input.as_bytes().to_vec();
+                let result = gzip_buf(&data, buf_size);
+                let mut gunzipper = GzDecoder::new(&result[..]);
+                let mut s = String::new();
+                if let Err(e) = gunzipper.read_to_string(&mut s) {
+                    panic!("input: {input}: {e:#?}")
+                }
 
-            assert_eq!(input, s);
+                assert_eq!(input, s);
+            }
         }
     }
 
-    fn gzip_buf(input: &[u8]) -> Vec<u8> {
+    fn gzip_buf(input: &[u8], buf_size: usize) -> Vec<u8> {
         let mut out = Vec::new();
-        gzip(BufWriter::new(&mut out), BufReader::new(input), cfg());
-        println!("{}", out.len());
+        gzip(
+            BufWriter::new(&mut out),
+            BufReader::new(input),
+            cfg(buf_size),
+        );
         out
     }
 
-    fn cfg() -> Config {
+    fn cfg(buf_size: usize) -> Config {
         Config {
             mtime: DateTime::default(),
-            buf_size: 1024,
+            buf_size,
         }
     }
 }

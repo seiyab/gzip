@@ -4,7 +4,7 @@ use super::symbolize;
 
 pub fn dynamic_huffman(input: &[u8], output: Bits) -> Bits {
     let mut bits = output;
-    bits.add([true, false, true].iter().copied());
+    bits.add([false, false, true].iter().copied());
     let symbols = symbolize(input);
     let mut lit_weights = vec![0; 286];
     for s in symbols.iter() {
@@ -32,7 +32,7 @@ pub fn dynamic_huffman(input: &[u8], output: Bits) -> Bits {
 
 #[cfg(test)]
 mod tests {
-    use crate::deflate::bits::Bits;
+    use crate::deflate::bits::{Bits, ShortBits};
 
     use super::dynamic_huffman;
     use flate2::read::DeflateDecoder;
@@ -130,8 +130,18 @@ mod tests {
     }
 
     fn deflate(data: &[u8]) -> Vec<u8> {
-        let (mut out, rest) = dynamic_huffman(data, Bits::new()).drain_bytes();
+        let bits = dynamic_huffman(data, Bits::new());
+        let (mut out, bits) = bits.drain_bytes();
+        let (last, rest) = last_block(bits).drain_bytes();
+        out.extend(last);
         out.push(rest.last());
+        out
+    }
+
+    fn last_block(bits: Bits) -> Bits {
+        let mut out = bits;
+        out.add([true, true, false].iter().copied());
+        out.append(&ShortBits::code(0, 7));
         out
     }
 }

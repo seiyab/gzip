@@ -35,6 +35,10 @@ impl Bits {
         self.add((0..another.i).map(|i| (another.bits >> i) & 1 > 0));
     }
 
+    pub fn append(&mut self, another: &ShortBits) {
+        self.add(another.bits().into_iter());
+    }
+
     pub fn drain_bytes(self) -> (Vec<u8>, Self) {
         let bytes = self.bytes;
         return (
