@@ -92,7 +92,7 @@ impl ShortBits {
         }
     }
 
-    pub fn zero() -> Self {
+    pub const fn zero() -> Self {
         Self { body: 0, size: 0 }
     }
 
