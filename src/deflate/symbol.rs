@@ -92,7 +92,7 @@ fn length_extra_bits(l: usize) -> ShortBits {
     let extra_bits_len = 64u32 - (l - 3).leading_zeros() - 3;
     let group_min_length = (1u32 << (extra_bits_len + 2)) + 3;
     let size_in_group = l as u32 - group_min_length;
-    return ShortBits::data(size_in_group.into(), extra_bits_len as u8);
+    return ShortBits::data(size_in_group.into(), extra_bits_len as u8).trim();
 }
 
 fn distance_bits(d: usize, dist_encoder: &AlphabetEncoder) -> ShortBits {
@@ -109,7 +109,7 @@ fn distance_bits(d: usize, dist_encoder: &AlphabetEncoder) -> ShortBits {
         let size_in_group = d as u32 - group_min_distance;
         let code = group_min_code + (size_in_group >> extra_bits_len);
         let code_bits = dist_encoder.encode(code as usize);
-        let extra_bits = ShortBits::data(size_in_group.into(), extra_bits_len as u8);
+        let extra_bits = ShortBits::data(size_in_group.into(), extra_bits_len as u8).trim();
         return code_bits.concat(&extra_bits);
     }
     panic!("unsupported distance")
