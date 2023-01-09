@@ -96,3 +96,23 @@ impl ShortBits {
         }
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::{Bits, ShortBits};
+
+    #[test]
+    fn append_short_bits_into_bits() {
+        let mut bits = Bits::new();
+        bits.append(&ShortBits::data(0x12_34, 2 * 8));
+        let (bytes, _) = bits.drain_bytes();
+
+        assert_eq!(vec![0x34, 0x12], bytes);
+
+        let mut bits = Bits::new();
+        bits.append(&ShortBits::data(0x06_34_12, 2 * 8 + 4));
+        bits.append(&ShortBits::data(0x07_85, 8 + 4));
+        let (bytes, _) = bits.drain_bytes();
+
+        assert_eq!(vec![0x12, 0x34, 0x56, 0x78], bytes);
+    }
+}
