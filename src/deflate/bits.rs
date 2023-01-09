@@ -89,6 +89,7 @@ impl ShortBits {
     }
 
     pub fn concat(&self, another: &Self) -> Self {
+        debug_assert!(u32::from(self.size + another.size) <= u64::BITS);
         Self {
             body: (self.body << another.size) + another.body,
             size: self.size + another.size,

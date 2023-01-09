@@ -15,11 +15,10 @@ impl Symbol {
         &self,
         lit_encoder: &AlphabetEncoder,
         dist_encoder: &AlphabetEncoder,
-    ) -> Vec<bool> {
+    ) -> ShortBits {
         lit_encoder
             .encode(self.code())
             .concat(&self.additional_bits(dist_encoder))
-            .bits()
     }
 
     pub fn code(&self) -> usize {

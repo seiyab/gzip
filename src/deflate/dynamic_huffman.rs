@@ -21,11 +21,7 @@ pub fn dynamic_huffman(input: &[u8], output: Bits) -> Bits {
     bits.extend(&CodeLengthTable::encode(&lit_table, &dist_table));
 
     for s in symbols.iter() {
-        bits.add(
-            s.encode(&lit_table.build_encoder(), &dist_table.build_encoder())
-                .iter()
-                .copied(),
-        );
+        bits.append(&s.encode(&lit_table.build_encoder(), &dist_table.build_encoder()));
     }
     return bits;
 }

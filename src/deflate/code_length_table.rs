@@ -85,24 +85,24 @@ impl CodeLengthTable {
         let hlit = ShortBits::data(lit_table.table.len() as u64 - 257, 5);
         let hdist = ShortBits::data(dist_table.table.len() as u64 - 1, 5);
         let hclen = ShortBits::data(19 - 4, 4);
-        bits.add(hlit.bits().iter().copied());
-        bits.add(hdist.bits().iter().copied());
-        bits.add(hclen.bits().iter().copied());
+        bits.append(&hlit);
+        bits.append(&hdist);
+        bits.append(&hclen);
 
         let lc_table = CodeLengthTable::flat(19);
         let lc_encoder = lc_table.build_encoder();
         for &cl in CODE_LENGTH_ORDER.iter() {
             let l = lc_table.table[cl];
-            bits.add(ShortBits::data(l.into(), 3).bits().iter().copied());
+            bits.append(&ShortBits::data(l.into(), 3));
         }
 
         for s in symbolize_code_length(lit_table.table.iter()).iter() {
-            bits.add(lc_encoder.encode(s.code()).bits().iter().copied());
-            bits.add(s.additional_bits().bits().iter().copied());
+            bits.append(&lc_encoder.encode(s.code()));
+            bits.append(&s.additional_bits());
         }
         for s in symbolize_code_length(dist_table.table.iter()).iter() {
-            bits.add(lc_encoder.encode(s.code()).bits().iter().copied());
-            bits.add(s.additional_bits().bits().iter().copied());
+            bits.append(&lc_encoder.encode(s.code()));
+            bits.append(&s.additional_bits());
         }
 
         return bits;
