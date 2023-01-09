@@ -56,28 +56,18 @@ mod tests {
 
     #[test]
     fn read_gzip() {
-        let data = "foobar".as_bytes().to_vec();
-        let result = gzip_buf(&data);
-        let mut gunzipper = GzDecoder::new(&result[..]);
-        let mut s = String::new();
-        if let Err(e) = gunzipper.read_to_string(&mut s) {
-            panic!("{e:#?}")
+        let cases = ["foobar", "foobar123foo1234foobar"];
+        for input in cases.into_iter() {
+            let data = input.as_bytes().to_vec();
+            let result = gzip_buf(&data);
+            let mut gunzipper = GzDecoder::new(&result[..]);
+            let mut s = String::new();
+            if let Err(e) = gunzipper.read_to_string(&mut s) {
+                panic!("{e:#?}")
+            }
+
+            assert_eq!(input, s);
         }
-
-        assert_eq!("foobar", s);
-    }
-
-    #[test]
-    fn read_gzip_with_duplicated_sequence() {
-        let data = "foobar123foo1234foobar".as_bytes().to_vec();
-        let result = gzip_buf(&data);
-        let mut gunzipper = GzDecoder::new(&result[..]);
-        let mut s = String::new();
-        if let Err(e) = gunzipper.read_to_string(&mut s) {
-            panic!("{e:#?}")
-        }
-
-        assert_eq!("foobar123foo1234foobar", s);
     }
 
     fn gzip_buf(input: &[u8]) -> Vec<u8> {
