@@ -111,7 +111,7 @@ impl CodeLengthTable {
         let mut entries: Vec<(usize, &u8)> = self.table.iter().enumerate().collect();
         // NOTE: utilizing property that sort_by is stable
         entries.sort_by(|left, right| left.1.cmp(right.1));
-        let mut table = vec![ShortBits::code(0, 0); 288];
+        let mut table = vec![ShortBits::zero(); 288];
 
         let mut code = 0u64;
         let mut bits: u8 = 0;

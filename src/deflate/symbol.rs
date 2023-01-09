@@ -73,8 +73,8 @@ impl Symbol {
 
     pub fn additional_bits(&self, dist_encoder: &AlphabetEncoder) -> ShortBits {
         match self {
-            &Symbol::Literal(_) => ShortBits::code(0, 0),
-            &Symbol::EndOfBlock => ShortBits::code(0, 0),
+            &Symbol::Literal(_) => ShortBits::zero(),
+            &Symbol::EndOfBlock => ShortBits::zero(),
             &Symbol::Reference { length, distance } => {
                 length_extra_bits(length).concat(&distance_bits(distance, dist_encoder))
             }
@@ -84,7 +84,7 @@ impl Symbol {
 
 fn length_extra_bits(l: usize) -> ShortBits {
     if l < 11 {
-        return ShortBits::data(0, 0);
+        return ShortBits::zero();
     }
     if l > Symbol::MAX_LENGTH {
         panic!("unsupported length")
