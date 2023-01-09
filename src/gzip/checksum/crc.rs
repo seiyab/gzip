@@ -9,7 +9,7 @@ impl Crc {
         }
     }
 
-    pub fn append(self, data: &[u8]) -> Self {
+    pub fn append(&mut self, data: &[u8]) -> Self {
         let mut c = self.value;
         for &d in data.iter() {
             c = TABLE[((c ^ u32::from(d)) & 0xff) as usize] ^ (c >> 8);
