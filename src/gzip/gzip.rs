@@ -1,17 +1,30 @@
-use super::crc;
+use std::io::{Read, Write};
+
+use super::crc::Crc;
 use crate::deflate::deflate;
 use chrono::{DateTime, TimeZone};
 
-pub fn gzip<Tz: TimeZone>(data: &Vec<u8>, mtime: &DateTime<Tz>) -> Vec<u8> {
-    member(data, mtime)
+pub fn gzip<Tz: TimeZone, R: Read, W: Write>(output: W, mtime: &DateTime<Tz>, input: R) {
+    member(output, mtime, input)
 }
 
-fn member<Tz: TimeZone>(data: &Vec<u8>, mtime: &DateTime<Tz>) -> Vec<u8> {
-    let mut m = header(mtime);
-    m.extend(deflate(&data));
-    m.extend(crc::crc(&data));
-    m.extend(data.len().to_le_bytes().iter().take(4));
-    return m;
+fn member<Tz: TimeZone, R: Read, W: Write>(mut output: W, mtime: &DateTime<Tz>, mut input: R) {
+    output.write_all(&header(mtime)).unwrap();
+    let mut crc = Crc::new();
+    let mut buf = Vec::new();
+    input.read_to_end(&mut buf).unwrap();
+    crc = crc.append(&buf);
+    output.write_all(&deflate(&buf)).unwrap();
+    output.write_all(&crc.get()).unwrap();
+    output
+        .write_all(
+            &buf.len()
+                .to_le_bytes()
+                .into_iter()
+                .take(4)
+                .collect::<Vec<_>>(),
+        )
+        .unwrap();
 }
 
 fn header<Tz: TimeZone>(mtime: &DateTime<Tz>) -> Vec<u8> {
@@ -46,14 +59,14 @@ impl Flg {
 #[cfg(test)]
 mod tests {
     use super::gzip;
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, TimeZone, Utc};
     use flate2::read::GzDecoder;
-    use std::io::Read;
+    use std::io::{BufReader, BufWriter, Read};
 
     #[test]
     fn read_gzip() {
         let data = "foobar".as_bytes().to_vec();
-        let result = gzip(&data, &DateTime::<Utc>::default());
+        let result = gzip_buf(&data, &DateTime::<Utc>::default());
         let mut gunzipper = GzDecoder::new(&result[..]);
         let mut s = String::new();
         if let Err(e) = gunzipper.read_to_string(&mut s) {
@@ -66,7 +79,7 @@ mod tests {
     #[test]
     fn read_gzip_with_duplicated_sequence() {
         let data = "foobar123foo1234foobar".as_bytes().to_vec();
-        let result = gzip(&data, &DateTime::<Utc>::default());
+        let result = gzip_buf(&data, &DateTime::<Utc>::default());
         let mut gunzipper = GzDecoder::new(&result[..]);
         let mut s = String::new();
         if let Err(e) = gunzipper.read_to_string(&mut s) {
@@ -74,5 +87,12 @@ mod tests {
         }
 
         assert_eq!("foobar123foo1234foobar", s);
+    }
+
+    fn gzip_buf<Tz: TimeZone>(input: &[u8], mtime: &DateTime<Tz>) -> Vec<u8> {
+        let mut out = Vec::new();
+        gzip(BufWriter::new(&mut out), mtime, BufReader::new(input));
+        println!("{}", out.len());
+        out
     }
 }

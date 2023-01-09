@@ -22,10 +22,6 @@ impl Crc {
     }
 }
 
-pub fn crc(data: &Vec<u8>) -> [u8; 4] {
-    Crc::new().append(data).get()
-}
-
 const TABLE: [u32; 256] = make_table();
 
 const fn make_table() -> [u32; 256] {
