@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, mem::size_of, ops::Add};
+use std::{mem::size_of, ops::Add};
 
 use super::{
     alphabet_encoder::AlphabetEncoder,
@@ -18,10 +18,8 @@ impl CodeLengthTable {
             .enumerate()
             .filter(|&(_, w)| w > 0)
             .collect();
-        stat.sort_by(|l, r| match l.1.cmp(&r.1) {
-            Ordering::Equal => l.0.cmp(&r.0),
-            x => x.reverse(),
-        });
+        // NOTE: utilizing property that sort_by is stable
+        stat.sort_by(|l, r| l.1.cmp(&r.1).reverse());
 
         let mut table = vec![0u8; weights.len()];
         for &(i, len) in Self::decide_code_lengths(&stat, max_length, 0).iter() {
@@ -111,13 +109,8 @@ impl CodeLengthTable {
 
     pub fn build_encoder(&self) -> AlphabetEncoder {
         let mut entries: Vec<(usize, &u8)> = self.table.iter().enumerate().collect();
-        entries.sort_by(|left, right| {
-            let len_ord = left.1.cmp(right.1);
-            if len_ord != std::cmp::Ordering::Equal {
-                return len_ord;
-            }
-            return left.0.cmp(&right.0);
-        });
+        // NOTE: utilizing property that sort_by is stable
+        entries.sort_by(|left, right| left.1.cmp(right.1));
         let mut table = vec![ShortBits::code(0, 0); 288];
 
         let mut code = 0u64;
