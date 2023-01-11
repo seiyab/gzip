@@ -30,7 +30,7 @@ impl Bits {
     pub fn extend(&mut self, another: &Self) {
         for byte in another.bytes.iter() {
             self.bytes.push(self.bits + (byte << self.i));
-            self.bits = byte >> (8 - self.i);
+            self.bits = byte.checked_shr(8 - self.i as u32).unwrap_or(0);
         }
         self.add((0..another.i).map(|i| (another.bits >> i) & 1 > 0));
     }
