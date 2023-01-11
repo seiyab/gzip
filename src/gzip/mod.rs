@@ -1,3 +1,4 @@
+mod bench;
 mod checksum;
 mod config;
 mod gzip;

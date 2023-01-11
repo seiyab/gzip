@@ -6,7 +6,7 @@ mod args;
 mod deflate;
 mod gzip;
 
-const BUF_SIZE: usize = 1000_000;
+const BUF_SIZE: usize = 1_000_000;
 
 fn main() -> io::Result<()> {
     let a = args::Args::parse().unwrap();
