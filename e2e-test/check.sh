@@ -9,6 +9,8 @@ DATA_DIR="$SCRIPT_DIR/testdata"
 cargo build
 BIN="$PROJECT_DIR/target/debug/gzip"
 
+rm -f "$DATA_DIR/*.gz"
+
 FILES=$( ls $DATA_DIR )
 
 for FILE in $FILES
