@@ -1,22 +1,42 @@
-use super::{
-    locator::{Locator, Progress},
-    symbol::Symbol,
-};
+use super::{locator::Locator, symbol::Symbol};
 
 pub fn symbolize(data: &[u8]) -> Vec<Symbol> {
     let mut symbols: Vec<Symbol> = Vec::new();
     let mut locator = Locator::new();
-    locator.scan(data, |i, locs| {
-        let (length, distance) =
-            longest_duplicate(data, i, locs.into_iter().rev().take(10).copied());
-        if length >= 3 {
-            symbols.push(Symbol::Reference { length, distance });
-            return Progress(length);
+    let mut cursor = 0usize;
+    for i in 0..data.len() {
+        if cursor > i {
+            continue;
         }
-        symbols.push(Symbol::Literal(data[i]));
-        return Progress(1);
-    });
-
+        let triple = triple_at(data, i);
+        let new_symbol = {
+            let locs = triple.and_then(|t| locator.locate(&t));
+            match locs {
+                None => Symbol::Literal(data[i]),
+                Some(locs) => {
+                    let (length, distance) =
+                        longest_duplicate(data, i, locs.into_iter().rev().take(10).copied());
+                    if length >= 3 {
+                        Symbol::Reference { length, distance }
+                    } else {
+                        Symbol::Literal(data[i])
+                    }
+                }
+            }
+        };
+        cursor += match &new_symbol {
+            Symbol::Literal(_) => 1,
+            Symbol::Reference {
+                length,
+                distance: _,
+            } => *length,
+            _ => 0,
+        };
+        symbols.push(new_symbol);
+        if let Some(t) = &triple {
+            locator.register(t, i);
+        }
+    }
     symbols.push(Symbol::EndOfBlock);
 
     return symbols;
@@ -55,4 +75,12 @@ fn duplicate_length(data: &[u8], i: usize, j: usize) -> usize {
         len += 1;
     }
     return len;
+}
+
+fn triple_at(data: &[u8], i: usize) -> Option<[u8; 3]> {
+    if data.len() <= i + 2 {
+        None
+    } else {
+        Some([data[i], data[i + 1], data[i + 2]])
+    }
 }

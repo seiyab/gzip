@@ -6,8 +6,6 @@ pub struct Locator {
     queue: LinkedList<[u8; 3]>,
 }
 
-pub struct Progress(pub usize);
-
 impl Locator {
     pub fn new() -> Self {
         Self {
@@ -31,30 +29,7 @@ impl Locator {
         }
     }
 
-    pub fn scan<F>(&mut self, data: &[u8], mut f: F)
-    where
-        F: FnMut(usize, &LinkedList<usize>) -> Progress,
-    {
-        let mut i = 0;
-        while i < data.len() {
-            let tuple = match [data.get(i), data.get(i + 1), data.get(i + 2)] {
-                [Some(&x), Some(&y), Some(&z)] => Some([x, y, z]),
-                _ => None,
-            };
-            let empty = &EMPTY;
-            let locations = tuple.and_then(|t| self.locations.get(&t)).unwrap_or(empty);
-            let Progress(p) = f(i, locations);
-            let next = i + p;
-
-            while i < next {
-                match [data.get(i), data.get(i + 1), data.get(i + 2)] {
-                    [Some(&x), Some(&y), Some(&z)] => self.register(&[x, y, z], i),
-                    _ => (),
-                }
-                i += 1;
-            }
-        }
+    pub fn locate(&self, triple: &[u8; 3]) -> Option<&LinkedList<usize>> {
+        self.locations.get(triple)
     }
 }
-
-const EMPTY: LinkedList<usize> = LinkedList::new();
