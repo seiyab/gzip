@@ -59,9 +59,13 @@ impl Bits {
         );
     }
 
-    pub fn last(self) -> u8 {
+    pub fn last(self) -> Option<u8> {
         assert_eq!(0, self.bytes.len());
-        self.bits
+        if self.i == 0 {
+            None
+        } else {
+            Some(self.bits)
+        }
     }
 }
 

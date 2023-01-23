@@ -133,7 +133,9 @@ mod tests {
         let (mut out, bits) = bits.drain_bytes();
         let (last, rest) = last_block(bits).drain_bytes();
         out.extend(last);
-        out.push(rest.last());
+        if let Some(last) = rest.last() {
+            out.push(last);
+        }
         out
     }
 

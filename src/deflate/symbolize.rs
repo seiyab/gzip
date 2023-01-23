@@ -4,18 +4,31 @@ pub fn symbolize(data: &[u8]) -> Vec<Symbol> {
     let mut symbols: Vec<Symbol> = Vec::new();
     let mut locator = Locator::new();
     let mut cursor = 0usize;
+    if let Some(&b) = data.get(0) {
+        locator.slide_hash(b);
+    }
+    if let Some(&b) = data.get(1) {
+        locator.slide_hash(b);
+    }
     for i in 0..data.len() {
+        let hash = if let Some(&nx_nx) = data.get(i + 2) {
+            Some(locator.slide_hash(nx_nx))
+        } else {
+            None
+        };
         if cursor > i {
+            if let Some(h) = hash {
+                locator.register(h, i);
+            }
             continue;
         }
-        let triple = triple_at(data, i);
         let new_symbol = {
-            let locs = triple.and_then(|t| locator.locate(&t));
+            let locs = hash.and_then(|h| locator.locate(h));
             match locs {
                 None => Symbol::Literal(data[i]),
                 Some(locs) => {
                     let (length, distance) =
-                        longest_duplicate(data, i, locs.into_iter().rev().take(10).copied());
+                        longest_duplicate(data, i, locs.into_iter().rev().take(30).copied());
                     if length >= 3 {
                         Symbol::Reference { length, distance }
                     } else {
@@ -33,8 +46,8 @@ pub fn symbolize(data: &[u8]) -> Vec<Symbol> {
             _ => 0,
         };
         symbols.push(new_symbol);
-        if let Some(t) = &triple {
-            locator.register(t, i);
+        if let Some(h) = hash {
+            locator.register(h, i);
         }
     }
     symbols.push(Symbol::EndOfBlock);
@@ -75,12 +88,4 @@ fn duplicate_length(data: &[u8], i: usize, j: usize) -> usize {
         len += 1;
     }
     return len;
-}
-
-fn triple_at(data: &[u8], i: usize) -> Option<[u8; 3]> {
-    if data.len() <= i + 2 {
-        None
-    } else {
-        Some([data[i], data[i + 1], data[i + 2]])
-    }
 }

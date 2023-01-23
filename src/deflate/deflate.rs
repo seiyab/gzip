@@ -24,7 +24,9 @@ pub fn deflate<R: Read, W: Write>(mut output: W, input: R, buf_size: usize) {
     }
     let (out, rest) = last_block(bits).drain_bytes();
     output.write_all(&out).unwrap();
-    output.write_all(&[rest.last()]).unwrap();
+    if let Some(last) = rest.last() {
+        output.write_all(&[last]).unwrap();
+    }
 }
 
 fn last_block(bits: Bits) -> Bits {

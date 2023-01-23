@@ -20,7 +20,7 @@ mod tests {
     #[test]
     #[ignore]
     fn bench_js() {
-        bench("vendor.js (188K)", || bench_file("testdata/vendor.js"))
+        bench("vendor.js (916K)", || bench_file("testdata/vendor.js"))
     }
 
     fn bench_file<P: AsRef<Path>>(filepath: P) -> usize {
