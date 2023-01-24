@@ -1,9 +1,7 @@
 use std::collections::LinkedList;
 
-#[derive(Default)]
 pub struct Locator {
-    locations: Vec<Option<LinkedList<usize>>>,
-    queue: LinkedList<usize>,
+    windows: LinkedList<WindowLocator>,
     hash: usize,
 }
 
@@ -11,11 +9,12 @@ const LOCATIONS_SIZE: usize = u16::MAX as usize;
 const HASH_SLIDE: usize = 5;
 const HASH_MASK: usize = (u16::MAX >> 1) as usize;
 
+const WINDOW_SIZE: usize = 20_000;
+
 impl Locator {
     pub fn new() -> Self {
         Self {
-            locations: vec![None; LOCATIONS_SIZE],
-            queue: LinkedList::new(),
+            windows: LinkedList::from_iter([WindowLocator::new(0), WindowLocator::new(0)]),
             hash: 0,
         }
     }
@@ -27,23 +26,82 @@ impl Locator {
     }
 
     pub fn register(&mut self, hash: usize, location: usize) {
-        if self.locations[hash] == None {
-            self.locations[hash] = Some(LinkedList::new());
+        let r = self
+            .windows
+            .front_mut()
+            .expect("locator should have 2 windows")
+            .register(hash, location);
+        if r.is_ok() {
+            return;
         }
-        let locs = self.locations[hash].as_mut().unwrap();
-        locs.push_front(location);
-        self.queue.push_back(hash);
-        while self.queue.len() > 20_000 {
-            if let Some(old_hash) = self.queue.pop_front() {
-                if let Some(old_locs) = self.locations[old_hash].as_mut() {
-                    old_locs.pop_back();
-                };
-            };
+        self.windows.pop_back();
+        self.windows.push_front(WindowLocator::new(location));
+        self.windows
+            .front_mut()
+            .expect("locator should have 2 windows")
+            .register(hash, location)
+            .expect("new WindowLocator should accept register");
+    }
+
+    pub fn locate(&self, hash: usize) -> Box<dyn Iterator<Item = usize> + '_> {
+        Box::new(
+            self.windows
+                .iter()
+                .flat_map(move |it| it.locate(hash.clone())),
+        )
+    }
+}
+
+struct WindowLocator {
+    heads: Vec<Option<usize>>,
+    tail_links: Vec<Option<usize>>,
+    offset: usize,
+}
+
+impl WindowLocator {
+    fn new(offset: usize) -> Self {
+        Self {
+            heads: vec![None; LOCATIONS_SIZE],
+            tail_links: vec![None; WINDOW_SIZE],
+            offset,
         }
     }
 
-    pub fn locate(&self, hash: usize) -> Option<&LinkedList<usize>> {
-        self.locations[hash].as_ref()
+    pub fn register(&mut self, hash: usize, location: usize) -> Result<(), ()> {
+        let local_location = location - self.offset;
+        if !(local_location < WINDOW_SIZE) {
+            return Err(());
+        }
+        if let Some(head) = self.heads[hash] {
+            self.tail_links[local_location] = Some(head);
+        }
+        self.heads[hash] = Some(local_location);
+        Ok(())
+    }
+
+    pub fn locate(&self, hash: usize) -> LocationIter {
+        LocationIter {
+            locator: &self,
+            pending: self.heads[hash],
+        }
+    }
+}
+
+struct LocationIter<'a> {
+    locator: &'a WindowLocator,
+    pending: Option<usize>,
+}
+
+impl<'a> Iterator for LocationIter<'a> {
+    type Item = usize;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(c) = self.pending {
+            self.pending = self.locator.tail_links[c].clone();
+            Some(c + self.locator.offset)
+        } else {
+            None
+        }
     }
 }
 

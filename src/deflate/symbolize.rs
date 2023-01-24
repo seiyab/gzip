@@ -23,12 +23,11 @@ pub fn symbolize(data: &[u8]) -> Vec<Symbol> {
             continue;
         }
         let new_symbol = {
-            let locs = hash.and_then(|h| locator.locate(h));
+            let locs = hash.map(|h| locator.locate(h));
             match locs {
                 None => Symbol::Literal(data[i]),
                 Some(locs) => {
-                    let (length, distance) =
-                        longest_duplicate(data, i, locs.into_iter().rev().take(30).copied());
+                    let (length, distance) = longest_duplicate(data, i, locs.take(10));
                     if length >= 3 {
                         Symbol::Reference { length, distance }
                     } else {
