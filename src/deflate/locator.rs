@@ -53,16 +53,16 @@ impl Locator {
 }
 
 struct WindowLocator {
-    heads: Vec<Option<usize>>,
-    tail_links: Vec<Option<usize>>,
+    heads: Box<[Option<usize>; LOCATIONS_SIZE]>,
+    tail_links: Box<[Option<usize>; WINDOW_SIZE]>,
     offset: usize,
 }
 
 impl WindowLocator {
     fn new(offset: usize) -> Self {
         Self {
-            heads: vec![None; LOCATIONS_SIZE],
-            tail_links: vec![None; WINDOW_SIZE],
+            heads: Box::new([None; LOCATIONS_SIZE]),
+            tail_links: Box::new([None; WINDOW_SIZE]),
             offset,
         }
     }
