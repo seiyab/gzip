@@ -138,5 +138,17 @@ mod tests {
         let (bytes, _) = bits.drain_bytes();
 
         assert_eq!(vec![0x21, 0x43, 0x65, 0x87], bytes);
+
+        let mut bits = Bits::new();
+        bits.append(&ShortBits::data(0b_0101, 4));
+        bits.append(&ShortBits::data(0b_111, 3));
+        bits.append(&ShortBits::data(0b_000, 3));
+        bits.append(&ShortBits::data(0b_001101, 6));
+        bits.append(&ShortBits::data(0b_10101, 5));
+        bits.append(&ShortBits::data(0b_11, 2));
+        bits.append(&ShortBits::data(0b_1100, 2));
+        let (bytes, _) = bits.drain_bytes();
+
+        assert_eq!(vec![0b0_111_0101, 0b001101_00, 0b0_11_10101], bytes);
     }
 }
