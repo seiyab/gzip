@@ -43,12 +43,10 @@ impl Locator {
             .expect("new WindowLocator should accept register");
     }
 
-    pub fn locate(&self, hash: usize) -> Box<dyn Iterator<Item = usize> + '_> {
-        Box::new(
-            self.windows
-                .iter()
-                .flat_map(move |it| it.locate(hash.clone())),
-        )
+    pub fn locate(&self, hash: usize) -> impl Iterator<Item = usize> + '_ {
+        self.windows
+            .iter()
+            .flat_map(move |it| it.locate(hash.clone()))
     }
 }
 
