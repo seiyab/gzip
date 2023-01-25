@@ -13,6 +13,12 @@ mod tests {
 
     #[test]
     #[ignore]
+    fn bench_rfc() {
+        bench("RFC1951.txt (36K)", || bench_file("testdata/RFC1951.txt"))
+    }
+
+    #[test]
+    #[ignore]
     fn bench_oas() {
         bench("oas (188K)", || bench_file("testdata/oai-spec-3.1.0.md"))
     }
