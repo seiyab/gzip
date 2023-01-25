@@ -73,6 +73,53 @@ mod tests {
         }
     }
 
+    #[test]
+    fn literal_tests() {
+        let cases = [
+            "foobar",
+            "foobar123foobar4foobar4xyz",
+            "0123456789_0123456789",
+            "this is a",
+        ];
+        for input in cases.into_iter() {
+            let data = input.as_bytes().to_vec();
+            let result = gzip_buf(&data, 10_000);
+            let mut gunzipper = GzDecoder::new(&result[..]);
+            let mut s = String::new();
+            if let Err(e) = gunzipper.read_to_string(&mut s) {
+                panic!("{e:#?}")
+            }
+
+            assert_eq!(input, s);
+        }
+    }
+
+    #[test]
+    fn repeat_tests() {
+        let three_times = (5..=10).chain([15, 25, 50]).map(|l| (l, 3));
+        let thousand_times = (1..=4).map(|l| (l, 1000));
+        for (l, r) in three_times.chain(thousand_times) {
+            let value = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[..l].repeat(r);
+            let data = value.as_bytes().to_vec();
+            let result = gzip_buf(&data, 10_000);
+            let mut gunzipper = GzDecoder::new(&result[..]);
+            let mut s = String::new();
+            if let Err(e) = gunzipper.read_to_string(&mut s) {
+                panic!("error: {e:#?}, length: {l}, repeat: {r}")
+            }
+
+            if data.len() < 20 {
+                assert_eq!(value, s);
+            } else {
+                let actual_omitted = &s[..20];
+                assert_eq!(
+                    value, s,
+                    "length: {l}, repeat: {r}, actual: {actual_omitted}..."
+                );
+            }
+        }
+    }
+
     fn gzip_buf(input: &[u8], buf_size: usize) -> Vec<u8> {
         let mut out = Vec::new();
         gzip(
