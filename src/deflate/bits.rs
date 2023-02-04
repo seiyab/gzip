@@ -36,15 +36,20 @@ impl Bits {
     }
 
     pub fn append(&mut self, another: &ShortBits) {
-        let bytes = another.body.to_le_bytes();
-        let len = (u32::from(another.size) / u8::BITS) as usize;
-        let effective_bytes = bytes.iter().take(len);
-        for b in effective_bytes {
-            self.bytes.push(self.bits + (b << self.i));
-            self.bits = b.checked_shr(8 - self.i as u32).unwrap_or(0);
+        let mut size = another.size;
+        let mut body = another.body;
+        while size > 0 {
+            let temp_bits: u64 = u64::from(self.bits) + ((body & u64::from(u32::MAX)) << self.i);
+            let temp_i = self.i + u8::min(size, 32) as usize;
+            body = body.checked_shr(32).unwrap_or(0);
+            let bytes = temp_bits.to_le_bytes();
+            for b in bytes.into_iter().take(temp_i / 8) {
+                self.bytes.push(b);
+            }
+            self.bits = bytes[temp_i / 8];
+            self.i = temp_i % 8;
+            size -= u8::min(size, 32);
         }
-        let rest = bytes[len];
-        self.add((0..(u32::from(another.size) % u8::BITS)).map(|i| (rest >> i) & 1 > 0));
     }
 
     pub fn drain_bytes(self) -> (Vec<u8>, Self) {
