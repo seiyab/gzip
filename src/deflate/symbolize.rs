@@ -27,7 +27,7 @@ pub fn symbolize(data: &[u8]) -> Vec<Symbol> {
             match locs {
                 None => Symbol::Literal(data[i]),
                 Some(locs) => {
-                    let (length, distance) = longest_duplicate(data, i, locs.take(10));
+                    let (length, distance) = long_duplicate(data, i, locs.take(10));
                     if length >= 3 {
                         Symbol::Reference { length, distance }
                     } else {
@@ -54,7 +54,7 @@ pub fn symbolize(data: &[u8]) -> Vec<Symbol> {
     return symbols;
 }
 
-fn longest_duplicate<I: Iterator<Item = usize>>(data: &[u8], i: usize, refs: I) -> (usize, usize) {
+fn long_duplicate<I: Iterator<Item = usize>>(data: &[u8], i: usize, refs: I) -> (usize, usize) {
     let mut len = 0;
     let mut distance = 0;
     for loc in refs {
@@ -65,6 +65,9 @@ fn longest_duplicate<I: Iterator<Item = usize>>(data: &[u8], i: usize, refs: I) 
         let len_candidate = duplicate_length(data, i, loc);
         if len_candidate > len {
             (len, distance) = (len_candidate, dist_candidate);
+            if len > 7 {
+                break;
+            }
         }
     }
     return (len, distance);
