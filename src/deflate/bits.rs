@@ -82,11 +82,7 @@ pub struct ShortBits {
 
 impl ShortBits {
     pub fn code(rev_body: u64, size: u8) -> Self {
-        let mut body: u64 = 0;
-        for i in 0..size {
-            body = body << 1;
-            body += (rev_body >> i) & 1
-        }
+        let body = rev_body.reverse_bits().rotate_left(size.into());
         Self { body, size }
     }
 
